@@ -94,7 +94,7 @@ class ProtoNodeDecoratorSpec extends Specification {
 
     def "ProtoNodeDecorator can not be constructed with a null ProtoNode"() {
         when:
-        new ProtoNodeDecorator(null)
+        ProtoNodeDecorator.createFrom(null)
 
         then:
         thrown(IllegalArgumentException)
@@ -103,7 +103,7 @@ class ProtoNodeDecoratorSpec extends Specification {
 
     def "Can get primary type"() {
         when:
-        final protoNodeDecorator = new ProtoNodeDecorator(decoratedProtoNode)
+        final protoNodeDecorator = ProtoNodeDecorator.createFrom(decoratedProtoNode)
 
         then:
         protoNodeDecorator.getPrimaryType() == JcrConstants.NT_UNSTRUCTURED
@@ -112,7 +112,7 @@ class ProtoNodeDecoratorSpec extends Specification {
 
     def "can get mixin property"() {
         given:
-        final protoNodeDecorator = new ProtoNodeDecorator(decoratedProtoNode)
+        final protoNodeDecorator = ProtoNodeDecorator.createFrom(decoratedProtoNode)
 
         when:
         final property = protoNodeDecorator.getMixinProperty()
@@ -125,14 +125,14 @@ class ProtoNodeDecoratorSpec extends Specification {
 
     def "Can get just writable properties"() {
         given:
-        final protoNodeDecorator = new ProtoNodeDecorator(decoratedProtoNode)
+        final protoNodeDecorator = ProtoNodeDecorator.createFrom(decoratedProtoNode)
 
         when:
         final properties = protoNodeDecorator.getWritableProperties()
 
         then:
         properties.size() == 1
-        properties[0].value.stringValue == "somevalue"
+        properties[0].stringValue == "somevalue"
     }
 
 

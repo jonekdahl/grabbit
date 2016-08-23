@@ -15,6 +15,7 @@
  */
 package com.twcable.grabbit.jcr
 
+import com.twcable.grabbit.client.jcr.AuthorizableProtoNodeDecorator
 import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.proto.NodeProtos.Value as ProtoValue
 import groovy.transform.CompileStatic
@@ -38,24 +39,43 @@ class ProtoNodeDecorator {
     Collection<ProtoPropertyDecorator> protoProperties
 
 
-    ProtoNodeDecorator(@Nonnull ProtoNode node) {
+    static ProtoNodeDecorator createFrom(@Nonnull ProtoNode node) {
         if(!node) throw new IllegalArgumentException("node must not be null!")
+        final protoProperties = node.propertiesList.collect { new ProtoPropertyDecorator(it) }
+        if(protoProperties.any { it.userType || it.groupType }) {
+            return new AuthorizableProtoNodeDecorator(node, protoProperties)
+        }
+        return new ProtoNodeDecorator(node, protoProperties)
+    }
+
+
+    protected ProtoNodeDecorator(@Nonnull ProtoNode node, @Nonnull Collection<ProtoPropertyDecorator> protoProperties) {
         this.innerProtoNode = node
-        this.protoProperties = node.propertiesList.collect { new ProtoPropertyDecorator(it) }
+        this.protoProperties = protoProperties
     }
 
 
-    String getPrimaryType() {
-        protoProperties.find { it.isPrimaryType() }.value.stringValue
+    boolean hasProperty(String propertyName) {
+        propertiesList.any{ it.name == propertyName }
     }
 
 
-    ProtoPropertyDecorator getMixinProperty() {
+    protected String getStringValueFrom(String propertyName) {
+        protoProperties.find { it.name == propertyName }.stringValue
+    }
+
+
+    private String getPrimaryType() {
+        protoProperties.find { it.isPrimaryType() }.stringValue
+    }
+
+
+    private ProtoPropertyDecorator getMixinProperty() {
         protoProperties.find { it.isMixinType() }
     }
 
 
-    Collection<ProtoPropertyDecorator> getWritableProperties() {
+    private Collection<ProtoPropertyDecorator> getWritableProperties() {
         protoProperties.findAll { !(it.name in [JCR_PRIMARYTYPE, JCR_MIXINTYPES]) }
     }
 
@@ -80,7 +100,7 @@ class ProtoNodeDecorator {
      * @param session to create or get the node path for
      * @return the newly created, or found node
      */
-    JCRNode getOrCreateNode(Session session) {
+    private JCRNode getOrCreateNode(Session session) {
         JcrUtils.getOrCreateByPath(innerProtoNode.name, primaryType, session)
     }
 

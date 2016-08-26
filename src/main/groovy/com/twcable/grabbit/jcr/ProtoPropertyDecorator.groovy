@@ -85,12 +85,12 @@ class ProtoPropertyDecorator {
 
 
     boolean isUserType() {
-        innerProtoProperty.name == 'rep:User'
+        getStringValue() == 'rep:User'
     }
 
 
     boolean isGroupType() {
-        innerProtoProperty.name == 'rep:Group'
+        getStringValue() == 'rep:Group'
     }
 
 

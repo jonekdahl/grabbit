@@ -1,11 +1,9 @@
-package com.twcable.grabbit.client.jcr
+package com.twcable.grabbit.jcr
 
-import com.twcable.grabbit.jcr.JcrNodeDecorator
-import com.twcable.grabbit.jcr.ProtoNodeDecorator
+import com.twcable.grabbit.proto.NodeProtos.Node as ProtoNode
 import com.twcable.grabbit.security.AuthorizablePrincipal
 import com.twcable.grabbit.security.InsufficientGrabbitPrivilegeException
 import groovy.transform.CompileStatic
-import groovy.transform.InheritConstructors
 import groovy.util.logging.Slf4j
 import org.apache.jackrabbit.api.security.user.Authorizable
 import org.apache.jackrabbit.api.security.user.User
@@ -40,9 +38,15 @@ import java.lang.reflect.ReflectPermission
  * trees, and can not be written directly by a client.
  */
 @CompileStatic
-@InheritConstructors
 @Slf4j
 class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
+
+
+    protected AuthorizableProtoNodeDecorator(@Nonnull ProtoNode node, @Nonnull Collection<ProtoPropertyDecorator> protoProperties) {
+        this.innerProtoNode = node
+        this.protoProperties = protoProperties
+    }
+
 
     @Override
     JcrNodeDecorator writeToJcr(@Nonnull Session session) {
@@ -61,13 +65,14 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
         return new JcrNodeDecorator(session.getNode(authorizable.getPath()))
     }
 
+
     /**
      * @return a new authorizable from this serialized node
      */
     private Authorizable createNewAuthorizable(final Session session) {
-        final UserManager userManager = AccessControlUtil.getUserManager(session)
+        final UserManager userManager = getUserManager(session)
         if(isUserType()) {
-            //When set a temporary password for now, and then set the real password later in setPasswordForUser(). See the method for why.
+            //We set a temporary password for now, and then set the real password later in setPasswordForUser(). See the method for why.
             final newUser = userManager.createUser(authorizableID, 'temp', new AuthorizablePrincipal(authorizableID), getIntermediateAuthorizablePath())
             //This is a special protected property for disabling user access
             if(hasProperty('rep:disabled')) {
@@ -84,6 +89,7 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
         return userManager.createGroup(authorizableID, new AuthorizablePrincipal(authorizableID), getIntermediateAuthorizablePath())
     }
 
+
     /**
      * From a client API perspective, there is really no way to truely update an existing authorizable node. All of the properties are protected, and there is no
      * known way to update them. What we do here is essentially remove the existing authorizable as denoted by the authorizableID, and recreate it.
@@ -96,7 +102,7 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
 
 
     private Authorizable findAuthorizable(final Session session) {
-        final UserManager userManager = AccessControlUtil.getUserManager(session)
+        final UserManager userManager = getUserManager(session)
         return userManager.getAuthorizable(getAuthorizableID())
     }
 
@@ -107,7 +113,10 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
 
 
     private String getIntermediateAuthorizablePath() {
-        return getName() - "/${getName().tokenize('/').last()}"
+        final pathTokens = getName().tokenize('/')
+        //remove last index, as this is the Authorizable node name
+        pathTokens.remove(pathTokens.size() - 1)
+        return "/${pathTokens.join('/')}"
     }
 
 
@@ -122,7 +131,7 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
      * @return true if we can sync this Authorizable
      */
     private boolean checkSecurityPermissions() {
-        final SecurityManager securityManager = System.getSecurityManager()
+        final SecurityManager securityManager = getSecurityManager()
         //If no security manager is present, then we are in the clear; otherwise, we need to check certain permissions
         if(!securityManager){
             log.debug "No SecurityManager found on this JVM. Sync of Users/Groups can continue"
@@ -166,6 +175,18 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
         }
     }
 
+    /**
+     * @return the system's security manager, or null if one is not present
+     */
+    SecurityManager getSecurityManager() {
+        return System.getSecurityManager()
+    }
+
+
+    UserManager getUserManager(final Session session) {
+        return AccessControlUtil.getUserManager(session)
+    }
+
 
     /**
      * Normally we would call org.apache.jackrabbit.oak.jcr.delegate.UserDelegator.changePassword(String password) to change a password (this is what is publicly available through the Jackrabbit API)
@@ -178,10 +199,10 @@ class AuthorizableProtoNodeDecorator extends ProtoNodeDecorator {
      *
      * @throws IllegalStateException if security permissions required to run this are not there. @{code checkSecurityPermissions()} should be called before calling this method
      **/
-    private void setPasswordForUser(final User user, final Session session) {
+     void setPasswordForUser(final User user, final Session session) {
         if(!checkSecurityPermissions()) throw new IllegalStateException("Security check failed for Grabbit. Can not set user passwords")
         //As a consumer we have access to org.apache.jackrabbit.oak.jcr.delegate.UserManagerDelegator below
-        final userManager = AccessControlUtil.getUserManager(session)
+        final userManager = getUserManager(session)
         Class userManagerDelegatorClass = userManager.getClass()
         //Reach into the class of this delegator, and grab the core Jackrabbit object we delegate to
         Field userManagerDelegateField = userManagerDelegatorClass.getDeclaredField('userManagerDelegate')

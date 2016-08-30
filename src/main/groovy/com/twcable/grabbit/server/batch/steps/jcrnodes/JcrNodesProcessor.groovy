@@ -51,7 +51,7 @@ class JcrNodesProcessor implements ItemProcessor<JcrNode, ProtoNode> {
 
         //TODO: Access Control Lists nodes are not supported right now.
         if (decoratedNode.path.contains("rep:policy")) {
-            log.info "Ignoring current node ${decoratedNode.innerNode}"
+            log.info "Ignoring rep:policy node ${decoratedNode.innerNode}. Grabbit does not currently support ACLs"
             return null
         }
 

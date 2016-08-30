@@ -48,6 +48,7 @@ class ClientBatchJob {
     public static final String CLIENT_USERNAME = "clientUsername"
     public static final String CONTENT_AFTER_DATE = "contentAfterDate"
     public static final String DELETE_BEFORE_WRITE = "deleteBeforeWrite"
+    public static final String SYNC_USERS_AND_GROUPS = "syncUsersAndGroups"
     public static final String PATH_DELTA_CONTENT = "pathDeltaContent"
     public static final String BATCH_SIZE = "batchSize"
 
@@ -144,6 +145,7 @@ class ClientBatchJob {
         PathConfiguration pathConfiguration
         boolean willDeleteBeforeWrite
         boolean doPathDeltaContent
+        boolean syncUsersAndGroups
         long transactionID
 
 
@@ -162,6 +164,11 @@ class ClientBatchJob {
 
         ConfigurationBuilder withTransactionID(long transactionID) {
             this.transactionID = transactionID
+            return this
+        }
+
+        ConfigurationBuilder syncUsersAndGroups(boolean syncUsersAndGroups) {
+            this.syncUsersAndGroups = syncUsersAndGroups
             return this
         }
     }
@@ -186,19 +193,20 @@ class ClientBatchJob {
 
         ClientBatchJob build() {
             final jobParameters = [
-                "timestamp"              : System.currentTimeMillis() as String,
-                (PATH)                : pathConfiguration.path,
-                (HOST)                : serverBuilder.host,
-                (PORT)                : serverBuilder.port,
-                (CLIENT_USERNAME)     : credentialsBuilder.clientUsername,
-                (SERVER_USERNAME)     : credentialsBuilder.serverUsername,
-                (SERVER_PASSWORD)     : credentialsBuilder.serverPassword,
-                (TRANSACTION_ID)      : String.valueOf(configsBuilder.transactionID),
-                (EXCLUDE_PATHS)       : pathConfiguration.excludePaths.join("*"),
-                (WORKFLOW_CONFIGS)    : pathConfiguration.workflowConfigIds.join("|"),
-                (DELETE_BEFORE_WRITE) : String.valueOf(pathConfiguration.deleteBeforeWrite),
-                (PATH_DELTA_CONTENT)  : String.valueOf(pathConfiguration.pathDeltaContent),
-                (BATCH_SIZE)          : String.valueOf(pathConfiguration.batchSize)
+                "timestamp"             : System.currentTimeMillis() as String,
+                (PATH)                  : pathConfiguration.path,
+                (HOST)                  : serverBuilder.host,
+                (PORT)                  : serverBuilder.port,
+                (CLIENT_USERNAME)       : credentialsBuilder.clientUsername,
+                (SERVER_USERNAME)       : credentialsBuilder.serverUsername,
+                (SERVER_PASSWORD)       : credentialsBuilder.serverPassword,
+                (TRANSACTION_ID)        : String.valueOf(configsBuilder.transactionID),
+                (EXCLUDE_PATHS)         : pathConfiguration.excludePaths.join("*"),
+                (WORKFLOW_CONFIGS)      : pathConfiguration.workflowConfigIds.join("|"),
+                (DELETE_BEFORE_WRITE)   : String.valueOf(pathConfiguration.deleteBeforeWrite),
+                (PATH_DELTA_CONTENT)    : String.valueOf(pathConfiguration.pathDeltaContent),
+                (BATCH_SIZE)            : String.valueOf(pathConfiguration.batchSize),
+                (SYNC_USERS_AND_GROUPS) : String.valueOf(configsBuilder.syncUsersAndGroups)
             ] as Map<String, String>
 
             if (pathConfiguration.pathDeltaContent) {

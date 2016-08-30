@@ -37,6 +37,7 @@ class ServerBatchJob {
     public static final String PATH = "path"
     public static final String CONTENT_AFTER_DATE = "contentAfterDate"
     public static final String EXCLUDE_PATHS = "excludePaths"
+    public static final String USERS_AND_GROUPS = "usersAndGroups"
 
     private final Job job
     private final JobParameters jobParameters
@@ -67,6 +68,7 @@ class ServerBatchJob {
         Iterator<Map.Entry<String, String>> namespacesIterator
         Iterator<JcrNode> nodeIterator
         ServletOutputStream servletOutputStream
+        boolean withUsersAndGroups
 
 
         ConfigurationBuilder(@Nonnull ConfigurableApplicationContext configurableApplicationContext) {
@@ -75,7 +77,7 @@ class ServerBatchJob {
 
 
         PathBuilder andConfiguration(Iterator<Map.Entry<String, String>> namespacesIterator,
-                                     Iterator<JcrNode> nodeIterator, ServletOutputStream servletOutputStream) {
+                                     Iterator<JcrNode> nodeIterator, ServletOutputStream servletOutputStream, boolean withUsersAndGroups) {
             if (namespacesIterator == null) throw new IllegalArgumentException("namespacesIterator == null")
             if (nodeIterator == null) throw new IllegalArgumentException("nodeIterator == null")
             if (servletOutputStream == null) throw new IllegalArgumentException("servletOutputStream == null")
@@ -83,6 +85,7 @@ class ServerBatchJob {
             this.namespacesIterator = namespacesIterator
             this.nodeIterator = nodeIterator
             this.servletOutputStream = servletOutputStream
+            this.withUsersAndGroups = withUsersAndGroups
             return new PathBuilder(this)
         }
     }
@@ -150,6 +153,7 @@ class ServerBatchJob {
                     .addString(PATH, afterDateBuilder.pathBuilder.path)
                     .addString(EXCLUDE_PATHS, afterDateBuilder.pathBuilder.excludePaths.join("*"))
                     .addString(CONTENT_AFTER_DATE, afterDateBuilder.contentAfterDate)
+                    .addString(USERS_AND_GROUPS, Boolean.toString(configurationBuilder.withUsersAndGroups))
                     .toJobParameters(),
                 (JobLauncher) configurationBuilder.configAppContext.getBean("serverJobLauncher" ,JobLauncher)
             )

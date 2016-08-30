@@ -103,6 +103,7 @@ class CreateHttpConnectionTasklet implements Tasklet {
         URIBuilder uriBuilder = new URIBuilder(scheme: "http", host: host, port: port as Integer, path: "/grabbit/content")
         uriBuilder.addParameter("path", encodedPath)
         uriBuilder.addParameter("after", encodedContentAfterDate)
+        uriBuilder.addParameter("usersAndGroups", jobParameters.get(ClientBatchJob.SYNC_USERS_AND_GROUPS) as String)
         for(String excludePath : excludePaths) {
             uriBuilder.addParameter("excludePath", URLEncoder.encode(excludePath, 'UTF-8'))
         }

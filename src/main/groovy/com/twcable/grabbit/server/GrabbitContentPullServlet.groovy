@@ -83,6 +83,6 @@ class GrabbitContentPullServlet extends SlingSafeMethodsServlet {
         //If the User is null, 'anonymous' will be used to connect to JCR.
         final serverUsername = request.remoteUser
         serverService.getContentForRootPath(serverUsername, decodedPath, decodedExcludePaths ?: null,
-                afterDateString ?: null, response.outputStream)
+                afterDateString ?: null, Boolean.parseBoolean(request.getParameter('usersAndGroups')), response.outputStream)
     }
 }

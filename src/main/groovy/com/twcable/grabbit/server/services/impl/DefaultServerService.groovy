@@ -55,7 +55,9 @@ class DefaultServerService implements ServerService {
             @Nullable String serverUsername,
             @Nonnull String path,
             @Nullable Collection<String> excludePaths,
-            @Nullable String afterDateString, @Nonnull ServletOutputStream servletOutputStream) {
+            @Nullable String afterDateString,
+            boolean syncUsersAndGroups,
+            @Nonnull ServletOutputStream servletOutputStream) {
 
         if (path == null) throw new IllegalStateException("path == null")
         if (excludePaths == null) excludePaths = (Collection<String>) Collections.EMPTY_LIST
@@ -80,7 +82,7 @@ class DefaultServerService implements ServerService {
             nodeIterator = new ExcludePathNodeIterator(nodeIterator, excludePaths)
 
             ServerBatchJob batchJob = new ServerBatchJob.ConfigurationBuilder(configurableApplicationContext)
-                .andConfiguration(new NamespaceHelper(session).namespaces.iterator(), nodeIterator, servletOutputStream)
+                .andConfiguration(new NamespaceHelper(session).namespaces.iterator(), nodeIterator, servletOutputStream, syncUsersAndGroups)
                 .andPath(path, excludePaths)
                 .andContentAfterDate(afterDateString)
                 .build()

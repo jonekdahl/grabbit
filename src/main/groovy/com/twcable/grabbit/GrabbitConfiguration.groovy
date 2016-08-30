@@ -38,6 +38,7 @@ class GrabbitConfiguration {
     final String serverHost
     final String serverPort
     final boolean deltaContent
+    final boolean usersAndGroups
     final Collection<PathConfiguration> pathConfigurations
 
     final long transactionID
@@ -46,7 +47,7 @@ class GrabbitConfiguration {
 
 
     private GrabbitConfiguration(@Nonnull String user, @Nonnull String pass, @Nonnull String host,
-                                 @Nonnull String port, boolean deltaContent,
+                                 @Nonnull String port, boolean deltaContent, boolean usersAndGroups,
                                  @Nonnull Collection<PathConfiguration> pathConfigs) {
         // all input is being verified by the "create" factory method
         this.serverUsername = user
@@ -54,6 +55,7 @@ class GrabbitConfiguration {
         this.serverHost = host
         this.serverPort = port
         this.deltaContent = deltaContent
+        this.usersAndGroups = usersAndGroups
         this.pathConfigurations = pathConfigs
         this.transactionID = CryptoUtil.generateNextId()
     }
@@ -87,6 +89,7 @@ class GrabbitConfiguration {
         def serverHost = nonEmpty(configMap, 'serverHost', errorBuilder)
         def serverPort = nonEmpty(configMap, 'serverPort', errorBuilder)
         def deltaContent = boolVal(configMap, 'deltaContent')
+        def usersAndGroups = boolVal(configMap, 'usersAndGroups')
         def transactionLevelBatchSizeFromConfig = integerValue(configMap, 'batchSize')
         def transactionLevelBatchSize = transactionLevelBatchSizeFromConfig > 0 ? transactionLevelBatchSizeFromConfig :  DEFAULT_BATCH_SIZE
         def transactionLevelDeleteBeforeWriteFlag = boolVal(configMap, 'deleteBeforeWrite')
@@ -113,6 +116,7 @@ class GrabbitConfiguration {
             serverHost,
             serverPort,
             deltaContent,
+            usersAndGroups,
             pathConfigurations.asImmutable()
         )
     }

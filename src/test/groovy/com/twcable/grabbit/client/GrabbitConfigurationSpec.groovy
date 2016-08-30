@@ -171,6 +171,7 @@ class GrabbitConfigurationSpec extends Specification {
         then:
         configuration instanceof GrabbitConfiguration
         !configuration.deltaContent
+        !configuration.usersAndGroups
         configuration.transactionID != null
 
 
@@ -183,6 +184,7 @@ class GrabbitConfigurationSpec extends Specification {
                 "serverHost" : "localhost",
                 "serverPort" : "4503",
                 "deltaContent" : false,
+                "usersAndGroups" : false,
                 "pathConfigurations" :  [
                     {
                         "path" : "/content/a/b",
@@ -325,8 +327,8 @@ class GrabbitConfigurationSpec extends Specification {
 
         then:
         output instanceof GrabbitConfiguration
-        output.pathConfigurations.first().pathDeltaContent == false
-        output.pathConfigurations.last().pathDeltaContent == true
+        !output.pathConfigurations.first().pathDeltaContent
+        output.pathConfigurations.last().pathDeltaContent
 
         where:
         input << [
@@ -382,6 +384,7 @@ class GrabbitConfigurationSpec extends Specification {
         serverPort : 4502
         deltaContent : true
         deleteBeforeWrite : true
+        usersAndGroups : true
         workflowConfigIds : &configs
           - '/configA'
           - '/configB'
@@ -407,8 +410,9 @@ class GrabbitConfigurationSpec extends Specification {
         output.pathConfigurations.first().excludePaths.size() > 0
         output.pathConfigurations.first().workflowConfigIds.first() == "/configA"
         output.pathConfigurations.first().excludePaths.first() == "/a/b/c"
-        output.pathConfigurations.first().deleteBeforeWrite == true
-        output.pathConfigurations.last().deleteBeforeWrite == false
+        output.pathConfigurations.first().deleteBeforeWrite
+        !output.pathConfigurations.last().deleteBeforeWrite
+        output.usersAndGroups
         output.deltaContent instanceof Boolean
     }
 
